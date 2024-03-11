@@ -205,7 +205,7 @@ public class StreamContent {
     }
 
     public String getFlv() {
-        return flv;
+        return https_flv;
     }
 
     public void setFlv(String flv) {

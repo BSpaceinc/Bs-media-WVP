@@ -144,6 +144,8 @@ public class CloudRecordController {
         if (endTime != null && ObjectUtils.isEmpty(endTime.trim())) {
             endTime = null;
         }
+        endTime = null;
+        startTime = null;
         return cloudRecordService.getList(page, count, query, app, stream, startTime, endTime, mediaServerItems);
     }
 

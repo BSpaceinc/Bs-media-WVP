@@ -29,6 +29,8 @@ import org.springframework.stereotype.Service;
 import java.time.*;
 import java.util.*;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 @Service
 @DS("share")
 public class CloudRecordServiceImpl implements ICloudRecordService {
@@ -60,6 +62,13 @@ public class CloudRecordServiceImpl implements ICloudRecordService {
                 throw new ControllerException(ErrorCode.ERROR100.getCode(), "开始时间格式错误，正确格式为： " + DateUtil.formatter);
             }
             startTimeStamp = DateUtil.yyyy_MM_dd_HH_mm_ssToTimestamp(startTime);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            try {
+                Date parse = sdf.parse(startTime);
+                startTimeStamp= parse.getTime();
+            } catch (ParseException e) {
+                logger.error(e.getMessage());
+            }
 
         }
         if (endTime != null ) {
@@ -67,7 +76,13 @@ public class CloudRecordServiceImpl implements ICloudRecordService {
                 throw new ControllerException(ErrorCode.ERROR100.getCode(), "结束时间格式错误，正确格式为： " + DateUtil.formatter);
             }
             endTimeStamp = DateUtil.yyyy_MM_dd_HH_mm_ssToTimestamp(endTime);
-
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            try {
+                Date parse = sdf.parse(startTime);
+                endTimeStamp= parse.getTime();
+            } catch (ParseException e) {
+                logger.error(e.getMessage());
+            }
         }
         PageHelper.startPage(page, count);
         List<CloudRecordItem> all = cloudRecordServiceMapper.getList(query, app, stream, startTimeStamp, endTimeStamp,
