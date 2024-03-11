@@ -146,6 +146,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         corsConfiguration.setExposedHeaders(Arrays.asList(JwtUtils.getHeader()));
 
+        corsConfiguration.setAllowedOriginPatterns(Arrays.asList("*"));
+
         UrlBasedCorsConfigurationSource url = new UrlBasedCorsConfigurationSource();
         url.registerCorsConfiguration("/**", corsConfiguration);
         return url;
