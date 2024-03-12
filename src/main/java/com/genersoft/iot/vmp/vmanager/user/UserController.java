@@ -212,12 +212,13 @@ public class UserController {
     @Operation(summary = "管理员修改普通用户密码")
     public LoginUser getUserInfo() {
         // 获取当前登录用户id
-        LoginUser userInfo = SecurityUtils.getUserInfo();
+        // LoginUser userInfo = SecurityUtils.getUserInfo();
 
-        if (userInfo == null) {
-            throw new ControllerException(ErrorCode.ERROR100);
-        }
-        User user = userService.getUser(userInfo.getUsername(), userInfo.getPassword());
-        return new LoginUser(user, LocalDateTime.now());
+//        if (userInfo == null) {
+//            // throw new ControllerException(ErrorCode.ERROR100);
+//        }
+        List<User> allUsers = userService.getAllUsers();
+        // User user = userService.getUser(userInfo.getUsername(), userInfo.getPassword());
+        return new LoginUser(allUsers.get(0), LocalDateTime.now());
     }
 }
