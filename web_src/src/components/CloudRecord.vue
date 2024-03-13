@@ -191,8 +191,8 @@ export default {
           app: '',
           stream: '',
           query: this.search,
-          startTime: this.startTime,
-          endTime: this.endTime,
+          startTime: new Date(this.startTime ).getMilliseconds()+ "",
+          endTime:  new Date(this.endTime ).getMilliseconds() + "",
           mediaServerId: this.mediaServerId,
           page: this.currentPage,
           count: this.count
