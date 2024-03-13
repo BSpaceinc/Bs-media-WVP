@@ -35,6 +35,8 @@ import java.text.SimpleDateFormat;
 @DS("share")
 public class CloudRecordServiceImpl implements ICloudRecordService {
 
+
+
     private final static Logger logger = LoggerFactory.getLogger(CloudRecordServiceImpl.class);
 
     @Autowired
@@ -58,31 +60,43 @@ public class CloudRecordServiceImpl implements ICloudRecordService {
         Long startTimeStamp = null;
         Long endTimeStamp = null;
         if (startTime != null ) {
-            if (!DateUtil.verification(startTime, DateUtil.formatter)) {
-                throw new ControllerException(ErrorCode.ERROR100.getCode(), "开始时间格式错误，正确格式为： " + DateUtil.formatter);
-            }
-            startTimeStamp = DateUtil.yyyy_MM_dd_HH_mm_ssToTimestamp(startTime);
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             try {
-                Date parse = sdf.parse(startTime);
-                startTimeStamp= parse.getTime();
-            } catch (ParseException e) {
-                logger.error(e.getMessage());
+                startTimeStamp= Long.valueOf(startTime);
+            }catch (Exception e){
+                if (!DateUtil.verification(startTime, DateUtil.formatter)) {
+                    throw new ControllerException(ErrorCode.ERROR100.getCode(), "开始时间格式错误，正确格式为： " + DateUtil.formatter);
+                }
+                startTimeStamp = DateUtil.yyyy_MM_dd_HH_mm_ssToTimestamp(startTime);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                try {
+                    Date parse = sdf.parse(startTime);
+                    startTimeStamp= parse.getTime();
+                } catch (ParseException ee) {
+                    logger.error(e.getMessage());
+                }
             }
+
+
+
 
         }
         if (endTime != null ) {
-            if (!DateUtil.verification(endTime, DateUtil.formatter)) {
-                throw new ControllerException(ErrorCode.ERROR100.getCode(), "结束时间格式错误，正确格式为： " + DateUtil.formatter);
-            }
-            endTimeStamp = DateUtil.yyyy_MM_dd_HH_mm_ssToTimestamp(endTime);
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             try {
-                Date parse = sdf.parse(startTime);
-                endTimeStamp= parse.getTime();
-            } catch (ParseException e) {
-                logger.error(e.getMessage());
+                endTimeStamp=Long.valueOf(endTime);
+            }catch (Exception ee){
+                if (!DateUtil.verification(endTime, DateUtil.formatter)) {
+                    throw new ControllerException(ErrorCode.ERROR100.getCode(), "结束时间格式错误，正确格式为： " + DateUtil.formatter);
+                }
+                endTimeStamp = DateUtil.yyyy_MM_dd_HH_mm_ssToTimestamp(endTime);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                try {
+                    Date parse = sdf.parse(startTime);
+                    endTimeStamp= parse.getTime();
+                } catch (ParseException e) {
+                    logger.error(e.getMessage());
+                }
             }
+
         }
         PageHelper.startPage(page, count);
         List<CloudRecordItem> all = cloudRecordServiceMapper.getList(query, app, stream, startTimeStamp, endTimeStamp,

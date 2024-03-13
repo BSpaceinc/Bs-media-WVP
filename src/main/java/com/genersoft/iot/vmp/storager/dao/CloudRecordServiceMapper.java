@@ -46,7 +46,11 @@ public interface CloudRecordServiceMapper {
             " <if test= 'stream != null '> and stream=#{stream}</if>" +
             " <if test= 'startTimeStamp != null and endTimeStamp == null'> and end_time &gt;= #{startTimeStamp}</if>" +
             " <if test= 'endTimeStamp != null and startTimeStamp == null'> and start_time &lt;= #{endTimeStamp}</if>" +
-            " <if test= 'endTimeStamp != null and startTimeStamp != null'> and ( (start_time &lt;= #{startTimeStamp} and end_time &gt;= #{startTimeStamp} ) or (start_time &gt;= #{startTimeStamp} and end_time &lt;= #{endTimeStamp}) or (start_time &lt;= #{endTimeStamp} and end_time &gt;= #{endTimeStamp} ) )</if>" +
+            " <if test= 'endTimeStamp != null and startTimeStamp != null'> and " +
+            " ( (start_time &lt;= #{startTimeStamp} and end_time &gt;= #{startTimeStamp} ) " +
+            "   or (start_time &gt;= #{startTimeStamp} and end_time &lt;= #{endTimeStamp}) " +
+            "   or (start_time &lt;= #{endTimeStamp} and end_time &gt;= #{endTimeStamp} ) " +
+            " )</if>" +
             " <if test= 'callId != null '> and call_id = #{callId}</if>" +
             " <if test= 'mediaServerItemList != null  ' > and media_server_id in " +
             " <foreach collection='mediaServerItemList'  item='item'  open='(' separator=',' close=')' > #{item.id}</foreach>" +
