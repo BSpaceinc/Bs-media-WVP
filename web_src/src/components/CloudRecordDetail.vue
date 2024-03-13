@@ -287,8 +287,8 @@
           params: {
             app: this.app,
             stream: this.stream,
-            startTime: this.chooseDate + " 00:00:00",
-            endTime: this.chooseDate + " 23:59:59",
+            startTime: new Date(this.chooseDate + " 00:00:00").getMilliseconds()+ "",
+            endTime:  new Date(this.chooseDate + " 23:59:59").getMilliseconds() + "",
             page: this.currentPage,
             count: this.count,
             mediaServerId: this.mediaServerId
