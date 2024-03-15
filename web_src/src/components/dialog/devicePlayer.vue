@@ -175,17 +175,17 @@
                 <div class="control-round">
                   <div class="control-round-inner"><i class="fa fa-pause-circle"></i></div>
                 </div>
-                <div style="position: absolute; left: 7.25rem; top: 0.25rem" @mousedown="ptzCamera('zoomin')"
+                <div style="position: absolute; left: 7.25rem; top: 0.1rem" @mousedown="ptzCamera('zoomin')"
                      @mouseup="ptzCamera('stop')"><i class="el-icon-zoom-in control-zoom-btn"
                                                      style="font-size: 1.875rem;"></i></div>
-                <div style="position: absolute; left: 7.25rem; top: 2.25rem; font-size: 1.875rem;"
+                <div style="position: absolute; left: 7.25rem; top: 2.1rem; font-size: 1.875rem;"
                      @mousedown="ptzCamera('zoomout')" @mouseup="ptzCamera('stop')"><i
                     class="el-icon-zoom-out control-zoom-btn"></i></div>
 
-                <div style="position: absolute; left: 7.25rem; top: 3.25rem" @mousedown="ptzCamera('focusin')"
+                <div style="position: absolute; left: 7.25rem; top: 4.5rem" @mousedown="ptzCamera('focusin')"
                      @mouseup="ptzCamera('stop')"><i class="el-icon-zoom-in control-zoom-btn"
                                                      style="font-size: 1.875rem;"></i></div>
-                <div style="position: absolute; left: 7.25rem; top: 5.25rem; font-size: 1.875rem;"
+                <div style="position: absolute; left: 7.25rem; top: 6rem; font-size: 1.875rem;"
                      @mousedown="ptzCamera('focusout')" @mouseup="ptzCamera('stop')"><i
                   class="el-icon-zoom-out control-zoom-btn"></i></div>
 
