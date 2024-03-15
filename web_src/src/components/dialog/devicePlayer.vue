@@ -181,6 +181,14 @@
                 <div style="position: absolute; left: 7.25rem; top: 3.25rem; font-size: 1.875rem;"
                      @mousedown="ptzCamera('zoomout')" @mouseup="ptzCamera('stop')"><i
                     class="el-icon-zoom-out control-zoom-btn"></i></div>
+
+                <div style="position: absolute; left: 7.25rem; top: 5.25rem" @mousedown="ptzCamera('focusin')"
+                     @mouseup="ptzCamera('stop')"><i class="el-icon-zoom-in control-zoom-btn"
+                                                     style="font-size: 1.875rem;"></i></div>
+                <div style="position: absolute; left: 7.25rem; top: 7.25rem; font-size: 1.875rem;"
+                     @mousedown="ptzCamera('focusout')" @mouseup="ptzCamera('stop')"><i
+                  class="el-icon-zoom-out control-zoom-btn"></i></div>
+
                 <div class="contro-speed" style="position: absolute; left: 4px; top: 7rem; width: 9rem;">
                   <el-slider v-model="controSpeed" :max="255"></el-slider>
                 </div>
