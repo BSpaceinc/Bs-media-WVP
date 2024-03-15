@@ -125,39 +125,18 @@ public class PtzController {
 				zoomSpeed = 0;
 				break;
 			case "focusin": // 焦距向前调焦
-				cmdCode = 65; // 假设焦距向前调焦的命令码为128
+				cmdCode = 66; // 假设焦距向前调焦的命令码为128
 				break;
 			case "focusout": // 焦距向后调焦
-				cmdCode = 66; // 假设焦距向后调焦的命令码为64
+				cmdCode = 65; // 假设焦距向后调焦的命令码为64
 				break;
 			case "irisopen": // 光圈开大
-				cmdCode = 256; // 假设光圈开大的命令码为256
+				cmdCode = 68; // 假设光圈开大的命令码为256
 				break;
 			case "irisclose": // 光圈关小
-				cmdCode = 128; // 假设光圈关小的命令码为128
+				cmdCode = 72; // 假设光圈关小的命令码为128
 				break;
-			case "toggleiris": // 切换光圈大小（如果有的话）
-				cmdCode = 2048; // 假设切换光圈大小的命令码为2048
-				break;
-			case "tele": // 变倍远摄
-				cmdCode = 512; // 假设变倍远摄的命令码为512
-				break;
-			case "wide": // 变倍广角
-				cmdCode = 1024; // 假设变倍广角的命令码为1024
-				break;
-			//0x01 - 右移
-			//0x02 - 左移
-			//
-			//0x04 - 下移
-			//0x08 - 上移
-			//0x10 - 变倍放大
-			//0x20 - 变倍缩小
-
-			//0x40 - 拉远焦距
-			//0x80 - 拉近焦距
-			//0x100 - 缩小光圈
-			//0x200 - 扩大光圈
-			default:
+		  default:
 				try {
 					cmdCode = Integer.valueOf(command);// 假设变倍广角的命令码为1024
 				}catch (Exception ignored){}
