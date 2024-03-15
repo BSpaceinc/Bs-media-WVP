@@ -117,7 +117,28 @@ public class SipUtils {
             cmdCode |= 0x10;	// 放大
         } else if(inOut == 1) {
             cmdCode |= 0x20;	// 缩小
+        } else if (inOut == 3) {
+            cmdCode |= 0x40;    //0x40 - 拉远焦距-3
+        } else if (inOut == 4) {
+            cmdCode |= 0x80;    //0x80 - 拉近焦距-4
+        } else if (inOut == 5) {
+            cmdCode |= 0x100;    //0x100 - 缩小光圈-5
+        } else if (inOut == 6) {
+            cmdCode |= 0x200;    //0x200 - 扩大光圈-6
         }
+
+        //0x01 - 右移
+        //0x02 - 左移
+        //
+        //0x04 - 下移
+        //0x08 - 上移
+        //0x10 - 变倍放大
+        //0x20 - 变倍缩小
+
+        //0x40 - 拉远焦距
+        //0x80 - 拉近焦距
+        //0x100 - 缩小光圈
+        //0x200 - 扩大光圈
         StringBuilder builder = new StringBuilder("A50F01");
         String strTmp;
         strTmp = String.format("%02X", cmdCode);
@@ -135,6 +156,70 @@ public class SipUtils {
         builder.append(strTmp, 0, 1).append("0");
         //计算校验码
         int checkCode = (0XA5 + 0X0F + 0X01 + cmdCode + moveSpeed + moveSpeed + (zoomSpeed /*<< 4*/ & 0XF0)) % 0X100;
+        strTmp = String.format("%02X", checkCode);
+        builder.append(strTmp, 0, 2);
+        return builder.toString();
+    }
+
+
+    /**
+     * 云台指令码计算
+     *
+     * @param leftRight 镜头左移右移 0:停止 1:左移 2:右移
+     * @param upDown 镜头上移下移 0:停止 1:上移 2:下移
+     * @param inOut 镜头放大缩小 0:停止 1:缩小 2:放大
+     * @param focus 镜头聚焦 0:停止 1:拉近焦距 2:拉远焦距
+     * @param moveSpeed 镜头移动速度 默认 0XFF (0-255)
+     * @param zoomSpeed 镜头缩放速度 默认 0X1 (0-255)
+     * @param focusSpeed 镜头聚焦速度 默认 0X1 (0-255)
+     */
+    public static String cmdString(int leftRight, int upDown, int inOut, int focus, int moveSpeed, int zoomSpeed, int focusSpeed) {
+        int cmdCode = 0;
+        if (leftRight == 2) {
+            cmdCode |= 0x01; // 右移
+        } else if (leftRight == 1) {
+            cmdCode |= 0x02; // 左移
+        }
+        if (upDown == 2) {
+            cmdCode |= 0x04; // 下移
+        } else if (upDown == 1) {
+            cmdCode |= 0x08; // 上移
+        }
+        if (inOut == 2) {
+            cmdCode |= 0x10; // 放大
+        } else if (inOut == 1) {
+            cmdCode |= 0x20; // 缩小
+        }
+        if (focus == 2) {
+            cmdCode |= 0x40; // 拉远焦距
+        } else if (focus == 1) {
+            cmdCode |= 0x80; // 拉近焦距
+        }
+
+        StringBuilder builder = new StringBuilder("A50F01");
+        String strTmp;
+        strTmp = String.format("%02X", cmdCode);
+        builder.append(strTmp, 0, 2);
+        strTmp = String.format("%02X", moveSpeed);
+        builder.append(strTmp, 0, 2);
+        builder.append(strTmp, 0, 2);
+
+        //优化zoom低倍速下的变倍速率
+        if ((zoomSpeed > 0) && (zoomSpeed < 16)) {
+            zoomSpeed = 16;
+        }
+        strTmp = String.format("%X", zoomSpeed);
+        builder.append(strTmp, 0, 1).append("0");
+
+        //优化focus低倍速下的聚焦速率
+        if ((focusSpeed > 0) && (focusSpeed < 16)) {
+            focusSpeed = 16;
+        }
+        strTmp = String.format("%X", focusSpeed);
+        builder.append(strTmp, 0, 1).append("0");
+
+        //计算校验码
+        int checkCode = (0XA5 + 0X0F + 0X01 + cmdCode + moveSpeed + moveSpeed + (zoomSpeed /*<< 4*/ & 0XF0) + (focusSpeed /*<< 4*/ & 0XF0)) % 0X100;
         strTmp = String.format("%02X", checkCode);
         builder.append(strTmp, 0, 2);
         return builder.toString();

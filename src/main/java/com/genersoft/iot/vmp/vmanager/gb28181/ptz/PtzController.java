@@ -55,7 +55,28 @@ public class PtzController {
 	@Operation(summary = "云台控制", security = @SecurityRequirement(name = JwtUtils.HEADER))
 	@Parameter(name = "deviceId", description = "设备国标编号", required = true)
 	@Parameter(name = "channelId", description = "通道国标编号", required = true)
-	@Parameter(name = "command", description = "控制指令,允许值: left, right, up, down, upleft, upright, downleft, downright, zoomin, zoomout, stop", required = true)
+	@Parameter(name = "command", description = "控制指令,允许值: left, right, up, down, upleft, upright, downleft, downright, zoomin, zoomout, stop." +
+			"case \"focusin\": // 焦距向前调焦\n" +
+			"\t\t\t\tcmdCode = 128; // 假设焦距向前调焦的命令码为128\n" +
+			"\t\t\t\tbreak;\n" +
+			"\t\t\tcase \"focusout\": // 焦距向后调焦\n" +
+			"\t\t\t\tcmdCode = 64; // 假设焦距向后调焦的命令码为64\n" +
+			"\t\t\t\tbreak;\n" +
+			"\t\t\tcase \"irisopen\": // 光圈开大\n" +
+			"\t\t\t\tcmdCode = 256; // 假设光圈开大的命令码为256\n" +
+			"\t\t\t\tbreak;\n" +
+			"\t\t\tcase \"irisclose\": // 光圈关小\n" +
+			"\t\t\t\tcmdCode = 128; // 假设光圈关小的命令码为128\n" +
+			"\t\t\t\tbreak;\n" +
+			"\t\t\tcase \"toggleiris\": // 切换光圈大小（如果有的话）\n" +
+			"\t\t\t\tcmdCode = 2048; // 假设切换光圈大小的命令码为2048\n" +
+			"\t\t\t\tbreak;\n" +
+			"\t\t\tcase \"tele\": // 变倍远摄\n" +
+			"\t\t\t\tcmdCode = 512; // 假设变倍远摄的命令码为512\n" +
+			"\t\t\t\tbreak;\n" +
+			"\t\t\tcase \"wide\": // 变倍广角\n" +
+			"\t\t\t\tcmdCode = 1024; // 假设变倍广角的命令码为1024\n" +
+			"\t\t\t\tbreak;", required = true)
 	@Parameter(name = "horizonSpeed", description = "水平速度", required = true)
 	@Parameter(name = "verticalSpeed", description = "垂直速度", required = true)
 	@Parameter(name = "zoomSpeed", description = "缩放速度", required = true)
@@ -103,6 +124,39 @@ public class PtzController {
 				verticalSpeed = 0;
 				zoomSpeed = 0;
 				break;
+			case "focusin": // 焦距向前调焦
+				cmdCode = 128; // 假设焦距向前调焦的命令码为128
+				break;
+			case "focusout": // 焦距向后调焦
+				cmdCode = 64; // 假设焦距向后调焦的命令码为64
+				break;
+			case "irisopen": // 光圈开大
+				cmdCode = 256; // 假设光圈开大的命令码为256
+				break;
+			case "irisclose": // 光圈关小
+				cmdCode = 128; // 假设光圈关小的命令码为128
+				break;
+			case "toggleiris": // 切换光圈大小（如果有的话）
+				cmdCode = 2048; // 假设切换光圈大小的命令码为2048
+				break;
+			case "tele": // 变倍远摄
+				cmdCode = 512; // 假设变倍远摄的命令码为512
+				break;
+			case "wide": // 变倍广角
+				cmdCode = 1024; // 假设变倍广角的命令码为1024
+				break;
+			//0x01 - 右移
+			//0x02 - 左移
+			//
+			//0x04 - 下移
+			//0x08 - 上移
+			//0x10 - 变倍放大
+			//0x20 - 变倍缩小
+
+			//0x40 - 拉远焦距
+			//0x80 - 拉近焦距
+			//0x100 - 缩小光圈
+			//0x200 - 扩大光圈
 			default:
 				break;
 		}
