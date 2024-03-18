@@ -160,9 +160,6 @@ public class PtzController {
 	@Parameter(name = "combindCode2", description = "组合码二", required = true)
 	@PostMapping("/front_end_command/{deviceId}/{channelId}")
 	public void frontEndCommand(@PathVariable String deviceId,@PathVariable String channelId,int cmdCode, int parameter1, int parameter2, int combindCode2){
-		if (cmdCode==129){
-			cmdCode=130;
-		}
 		if (logger.isDebugEnabled()) {
 			logger.debug(String.format("设备云台控制 API调用，deviceId：%s ，channelId：%s ，cmdCode：%d parameter1：%d parameter2：%d",deviceId, channelId, cmdCode, parameter1, parameter2));
 		}
