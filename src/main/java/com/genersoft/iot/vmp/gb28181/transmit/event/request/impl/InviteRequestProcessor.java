@@ -498,6 +498,7 @@ public class InviteRequestProcessor extends SIPRequestProcessorParent implements
                         String endTimeStr = DateUtil.urlFormatter.format(end);
                         String stream = device.getDeviceId() + "_" + channelId + "_" + startTimeStr + "_" + endTimeStr;
                         SSRCInfo ssrcInfo = mediaServerService.openRTPServer(mediaServerItem, stream, null, device.isSsrcCheck(), true, 0,false, false, device.getStreamModeForParam());
+                        sendRtpItem.setStream(stream);
                         // 写入redis， 超时时回复
                         redisCatchStorage.updateSendRTPSever(sendRtpItem);
                         playService.playBack(mediaServerItem, ssrcInfo, device.getDeviceId(), channelId, DateUtil.formatter.format(start),
@@ -977,7 +978,10 @@ public class InviteRequestProcessor extends SIPRequestProcessorParent implements
         }
         if (device != null) {
             logger.info("收到设备" + requesterId + "的语音广播Invite请求");
-            String key = VideoManagerConstants.BROADCAST_WAITE_INVITE + device.getDeviceId() + broadcastCatch.getChannelId();
+            String key = VideoManagerConstants.BROADCAST_WAITE_INVITE + device.getDeviceId();
+            if (!SipUtils.isFrontEnd(device.getDeviceId())) {
+                key += broadcastCatch.getChannelId();
+            }
             dynamicTask.stop(key);
             try {
                 responseAck(request, Response.TRYING);
@@ -1003,7 +1007,7 @@ public class InviteRequestProcessor extends SIPRequestProcessorParent implements
                     Media media = mediaDescription.getMedia();
 
                     Vector mediaFormats = media.getMediaFormats(false);
-                    if (mediaFormats.contains("8")) {
+//                    if (mediaFormats.contains("8")) {
                         port = media.getMediaPort();
                         String protocol = media.getProtocol();
                         // 区分TCP发流还是udp， 当前默认udp
@@ -1019,7 +1023,7 @@ public class InviteRequestProcessor extends SIPRequestProcessorParent implements
                             }
                         }
                         break;
-                    }
+//                    }
                 }
                 if (port == -1) {
                     logger.info("不支持的媒体格式，返回415");
