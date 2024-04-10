@@ -1,5 +1,6 @@
 package com.genersoft.iot.vmp.vmanager.gb28181.play;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.genersoft.iot.vmp.common.InviteSessionType;
@@ -30,6 +31,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.DeferredResult;
@@ -117,7 +119,10 @@ public class PlayController {
 				wvpResult.setMsg(ErrorCode.SUCCESS.getMsg());
 
 				if (data != null) {
-					StreamInfo streamInfo = (StreamInfo)data;
+					StreamInfo streamInfo_data = (StreamInfo)data;
+					StreamInfo streamInfo = new StreamInfo();
+					BeanUtils.copyProperties(streamInfo_data,streamInfo);
+					System.out.println("--------streamInfo----------"+ JSON.toJSONString(streamInfo));
 					if (userSetting.getUseSourceIpAsStreamIp()) {
 						streamInfo=streamInfo.clone();//深拷贝
 						String host;
