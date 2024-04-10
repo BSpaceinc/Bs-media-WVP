@@ -4,6 +4,7 @@ import com.genersoft.iot.vmp.common.StreamInfo;
 import com.genersoft.iot.vmp.media.bean.MediaInfo;
 import com.genersoft.iot.vmp.service.bean.DownloadFileInfo;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.apache.commons.lang3.StringUtils;
 
 @Schema(description = "流信息")
 public class StreamContent {
@@ -206,7 +207,11 @@ public class StreamContent {
     }
 
     public String getFlv() {
-        return https_flv;
+        if (StringUtils.isNotBlank(https_flv)){
+            return https_flv;
+        }
+
+        return https_fmp4;
     }
 
     public void setFlv(String flv) {
