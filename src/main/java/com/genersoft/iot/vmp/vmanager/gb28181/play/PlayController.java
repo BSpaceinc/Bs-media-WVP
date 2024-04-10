@@ -122,7 +122,7 @@ public class PlayController {
 					StreamInfo streamInfo_data = (StreamInfo)data;
 					StreamInfo streamInfo = new StreamInfo();
 					BeanUtils.copyProperties(streamInfo_data,streamInfo);
-					System.out.println("--------streamInfo----------"+ JSON.toJSONString(streamInfo));
+					// System.out.println("--------streamInfo----------"+ JSON.toJSONString(streamInfo));
 					if (userSetting.getUseSourceIpAsStreamIp()) {
 						streamInfo=streamInfo.clone();//深拷贝
 						String host;
