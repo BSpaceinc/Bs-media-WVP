@@ -6,21 +6,17 @@ import com.genersoft.iot.vmp.conf.UserSetting;
 import com.genersoft.iot.vmp.conf.exception.SsrcTransactionNotFoundException;
 import com.genersoft.iot.vmp.gb28181.bean.*;
 import com.genersoft.iot.vmp.gb28181.session.AudioBroadcastManager;
-import com.genersoft.iot.vmp.gb28181.session.SSRCFactory;
 import com.genersoft.iot.vmp.gb28181.session.VideoStreamSessionManager;
 import com.genersoft.iot.vmp.gb28181.transmit.SIPProcessorObserver;
 import com.genersoft.iot.vmp.gb28181.transmit.cmd.ISIPCommander;
 import com.genersoft.iot.vmp.gb28181.transmit.cmd.ISIPCommanderForPlatform;
 import com.genersoft.iot.vmp.gb28181.transmit.event.request.ISIPRequestProcessor;
 import com.genersoft.iot.vmp.gb28181.transmit.event.request.SIPRequestProcessorParent;
-import com.genersoft.iot.vmp.media.service.IMediaServerService;
-import com.genersoft.iot.vmp.media.zlm.ZLMServerFactory;
+import com.genersoft.iot.vmp.media.bean.MediaInfo;
 import com.genersoft.iot.vmp.media.bean.MediaServer;
-import com.genersoft.iot.vmp.media.zlm.dto.StreamPushItem;
+import com.genersoft.iot.vmp.media.service.IMediaServerService;
 import com.genersoft.iot.vmp.service.*;
-import com.genersoft.iot.vmp.service.bean.MessageForPushChannel;
-import com.genersoft.iot.vmp.service.bean.RequestStopPushStreamMsg;
-import com.genersoft.iot.vmp.service.redisMsg.RedisGbPlayMsgListener;
+import com.genersoft.iot.vmp.service.redisMsg.IRedisRpcService;
 import com.genersoft.iot.vmp.storager.IRedisCatchStorage;
 import com.genersoft.iot.vmp.storager.IVideoManagerStorage;
 import gov.nist.javax.sip.message.SIPRequest;
@@ -36,8 +32,6 @@ import javax.sip.SipException;
 import javax.sip.header.CallIdHeader;
 import javax.sip.message.Response;
 import java.text.ParseException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * SIP命令类型： BYE请求
@@ -76,12 +70,6 @@ public class ByeRequestProcessor extends SIPRequestProcessorParent implements In
 	private IVideoManagerStorage storager;
 
 	@Autowired
-	private ZLMServerFactory zlmServerFactory;
-
-	@Autowired
-	private SSRCFactory ssrcFactory;
-
-	@Autowired
 	private IMediaServerService mediaServerService;
 
 	@Autowired
@@ -100,7 +88,8 @@ public class ByeRequestProcessor extends SIPRequestProcessorParent implements In
 	private IStreamPushService pushService;
 
 	@Autowired
-	private RedisGbPlayMsgListener redisGbPlayMsgListener;
+	private IRedisRpcService redisRpcService;
+
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -110,7 +99,6 @@ public class ByeRequestProcessor extends SIPRequestProcessorParent implements In
 
 	/**
 	 * 处理BYE请求
-	 * @param evt
 	 */
 	@Override
 	public void process(RequestEvent evt) {
@@ -128,54 +116,38 @@ public class ByeRequestProcessor extends SIPRequestProcessorParent implements In
 			logger.info("[收到bye] 来自{}，停止通道：{}, 类型： {}, callId: {}", sendRtpItem.getPlatformId(), sendRtpItem.getChannelId(), sendRtpItem.getPlayType(), callIdHeader.getCallId());
 
 			String streamId = sendRtpItem.getStream();
-			Map<String, Object> param = new HashMap<>();
-			param.put("vhost","__defaultVhost__");
-			param.put("app",sendRtpItem.getApp());
-			param.put("stream",streamId);
-			param.put("ssrc",sendRtpItem.getSsrc());
 			logger.info("[收到bye] 停止推流：{}, 媒体节点： {}", streamId, sendRtpItem.getMediaServerId());
 
 			if (sendRtpItem.getPlayType().equals(InviteStreamType.PUSH)) {
-				// 查询这路流是否是本平台的
-				StreamPushItem push = pushService.getPush(sendRtpItem.getApp(), sendRtpItem.getStream());
-				if (push!= null && !push.isSelf()) {
-					// 不是本平台的就发送redis消息让其他wvp停止发流
-					ParentPlatform platform = platformService.queryPlatformByServerGBId(sendRtpItem.getPlatformId());
-					if (platform != null) {
-						RequestStopPushStreamMsg streamMsg = RequestStopPushStreamMsg.getInstance(sendRtpItem, platform.getName(), platform.getId());
-						redisGbPlayMsgListener.sendMsgForStopSendRtpStream(sendRtpItem.getServerId(), streamMsg);
+				// 不是本平台的就发送redis消息让其他wvp停止发流
+				ParentPlatform platform = platformService.queryPlatformByServerGBId(sendRtpItem.getPlatformId());
+				if (platform != null) {
+					redisCatchStorage.sendPlatformStopPlayMsg(sendRtpItem, platform);
+					if (!userSetting.getServerId().equals(sendRtpItem.getServerId())) {
+						redisRpcService.stopSendRtp(sendRtpItem.getRedisKey());
+						redisCatchStorage.deleteSendRTPServer(null, null, sendRtpItem.getCallId(), null);
+					}else {
+						MediaServer mediaServer = mediaServerService.getOne(sendRtpItem.getMediaServerId());
+						redisCatchStorage.deleteSendRTPServer(null, null, callIdHeader.getCallId(), null);
+						mediaServerService.stopSendRtp(mediaServer, sendRtpItem.getApp(), sendRtpItem.getStream(), sendRtpItem.getSsrc());
+						if (userSetting.getUseCustomSsrcForParentInvite()) {
+							mediaServerService.releaseSsrc(mediaServer.getId(), sendRtpItem.getSsrc());
+						}
 					}
 				}else {
-					MediaServer mediaInfo = mediaServerService.getOne(sendRtpItem.getMediaServerId());
-					redisCatchStorage.deleteSendRTPServer(sendRtpItem.getPlatformId(), sendRtpItem.getChannelId(),
-							callIdHeader.getCallId(), null);
-					zlmServerFactory.stopSendRtpStream(mediaInfo, param);
-					if (userSetting.getUseCustomSsrcForParentInvite()) {
-						mediaServerService.releaseSsrc(mediaInfo.getId(), sendRtpItem.getSsrc());
-					}
-
-					ParentPlatform platform = platformService.queryPlatformByServerGBId(sendRtpItem.getPlatformId());
-					if (platform != null) {
-						MessageForPushChannel messageForPushChannel = MessageForPushChannel.getInstance(0,
-								sendRtpItem.getApp(), sendRtpItem.getStream(), sendRtpItem.getChannelId(),
-								sendRtpItem.getPlatformId(), platform.getName(), userSetting.getServerId(), sendRtpItem.getMediaServerId());
-						messageForPushChannel.setPlatFormIndex(platform.getId());
-						redisCatchStorage.sendPlatformStopPlayMsg(messageForPushChannel);
-					}else {
-						logger.info("[上级平台停止观看] 未找到平台{}的信息，发送redis消息失败", sendRtpItem.getPlatformId());
-					}
+					logger.info("[上级平台停止观看] 未找到平台{}的信息，发送redis消息失败", sendRtpItem.getPlatformId());
 				}
 			}else {
 				MediaServer mediaInfo = mediaServerService.getOne(sendRtpItem.getMediaServerId());
 				redisCatchStorage.deleteSendRTPServer(sendRtpItem.getPlatformId(), sendRtpItem.getChannelId(),
 						callIdHeader.getCallId(), null);
-				zlmServerFactory.stopSendRtpStream(mediaInfo, param);
+				mediaServerService.stopSendRtp(mediaInfo, sendRtpItem.getApp(), sendRtpItem.getStream(), sendRtpItem.getSsrc());
 				if (userSetting.getUseCustomSsrcForParentInvite()) {
 					mediaServerService.releaseSsrc(mediaInfo.getId(), sendRtpItem.getSsrc());
 				}
 			}
-			MediaServer mediaInfo = mediaServerService.getOne(sendRtpItem.getMediaServerId());
-			if (mediaInfo != null) {
+			MediaServer mediaServer = mediaServerService.getOne(sendRtpItem.getMediaServerId());
+			if (mediaServer != null) {
 				AudioBroadcastCatch audioBroadcastCatch = audioBroadcastManager.get(sendRtpItem.getDeviceId(), sendRtpItem.getChannelId());
 				if (audioBroadcastCatch != null && audioBroadcastCatch.getSipTransactionInfo().getCallId().equals(callIdHeader.getCallId())) {
 					// 来自上级平台的停止对讲
@@ -183,8 +155,9 @@ public class ByeRequestProcessor extends SIPRequestProcessorParent implements In
 					audioBroadcastManager.del(sendRtpItem.getDeviceId(), sendRtpItem.getChannelId());
 				}
 
-				int totalReaderCount = zlmServerFactory.totalReaderCount(mediaInfo, sendRtpItem.getApp(), streamId);
-				if (totalReaderCount <= 0) {
+				MediaInfo mediaInfo = mediaServerService.getMediaInfo(mediaServer, sendRtpItem.getApp(), streamId);
+
+				if (mediaInfo.getReaderCount() <= 0) {
 					logger.info("[收到bye] {} 无其它观看者，通知设备停止推流", streamId);
 					if (sendRtpItem.getPlayType().equals(InviteStreamType.PLAY)) {
 						Device device = deviceService.getDevice(sendRtpItem.getDeviceId());
@@ -202,13 +175,13 @@ public class ByeRequestProcessor extends SIPRequestProcessorParent implements In
 				}
 			}
 		}
-
+		System.out.println(callIdHeader.getCallId());
 		// 可能是设备发送的停止
 		SsrcTransaction ssrcTransaction = streamSession.getSsrcTransactionByCallId(callIdHeader.getCallId());
 		if (ssrcTransaction == null) {
 			return;
 		}
-		logger.info("[收到bye] 来自设备：{}, 通道已停止推流: {}", ssrcTransaction.getDeviceId(), ssrcTransaction.getChannelId());
+		logger.info("[收到bye] 来自设备：{}, 通道: {}, 类型： {}", ssrcTransaction.getDeviceId(), ssrcTransaction.getChannelId(), ssrcTransaction.getType());
 
 		ParentPlatform platform = platformService.queryPlatformByServerGBId(ssrcTransaction.getDeviceId());
 		if (platform != null ) {
@@ -237,13 +210,35 @@ public class ByeRequestProcessor extends SIPRequestProcessorParent implements In
 				logger.info("[收到bye] 未找到通道，设备：{}， 通道：{}", ssrcTransaction.getDeviceId(), ssrcTransaction.getChannelId());
 				return;
 			}
-			storager.stopPlay(device.getDeviceId(), channel.getChannelId());
-			InviteInfo inviteInfo = inviteStreamService.getInviteInfoByDeviceAndChannel(InviteSessionType.PLAY, device.getDeviceId(), channel.getChannelId());
-			if (inviteInfo != null) {
-				inviteStreamService.removeInviteInfo(inviteInfo);
-				if (inviteInfo.getStreamInfo() != null) {
-					mediaServerService.closeRTPServer(inviteInfo.getStreamInfo().getMediaServerId(), inviteInfo.getStreamInfo().getStream());
-				}
+			switch (ssrcTransaction.getType()){
+				case PLAY:
+				case PLAYBACK:
+				case DOWNLOAD:
+					InviteInfo inviteInfo = inviteStreamService.getInviteInfoByDeviceAndChannel(InviteSessionType.PLAY, device.getDeviceId(), channel.getChannelId());
+					if (inviteInfo != null) {
+						storager.stopPlay(device.getDeviceId(), channel.getChannelId());
+						inviteStreamService.removeInviteInfo(inviteInfo);
+						if (inviteInfo.getStreamInfo() != null) {
+							mediaServerService.closeRTPServer(inviteInfo.getStreamInfo().getMediaServerId(), inviteInfo.getStreamInfo().getStream());
+						}
+					}
+					break;
+				case BROADCAST:
+				case TALK:
+					// 查找来源的对讲设备，发送停止
+					Device sourceDevice = storager.queryVideoDeviceByPlatformIdAndChannelId(ssrcTransaction.getDeviceId(), ssrcTransaction.getChannelId());
+					AudioBroadcastCatch audioBroadcastCatch = audioBroadcastManager.get(ssrcTransaction.getDeviceId(), channel.getChannelId());
+					if (sourceDevice != null) {
+						playService.stopAudioBroadcast(sourceDevice.getDeviceId(), channel.getChannelId());
+					}
+					if (audioBroadcastCatch != null) {
+						// 来自上级平台的停止对讲
+						logger.info("[停止对讲] 来自上级，平台：{}, 通道：{}", ssrcTransaction.getDeviceId(), channel.getChannelId());
+						audioBroadcastManager.del(ssrcTransaction.getDeviceId(), channel.getChannelId());
+					}
+					break;
+
+
 			}
 			// 释放ssrc
 			MediaServer mediaServerItem = mediaServerService.getOne(ssrcTransaction.getMediaServerId());
@@ -251,19 +246,6 @@ public class ByeRequestProcessor extends SIPRequestProcessorParent implements In
 				mediaServerService.releaseSsrc(mediaServerItem.getId(), ssrcTransaction.getSsrc());
 			}
 			streamSession.removeByCallId(device.getDeviceId(), channel.getChannelId(), ssrcTransaction.getCallId());
-			if (ssrcTransaction.getType() == InviteSessionType.BROADCAST) {
-				// 查找来源的对讲设备，发送停止
-				Device sourceDevice = storager.queryVideoDeviceByPlatformIdAndChannelId(ssrcTransaction.getDeviceId(), ssrcTransaction.getChannelId());
-				if (sourceDevice != null) {
-					playService.stopAudioBroadcast(sourceDevice.getDeviceId(), channel.getChannelId());
-				}
-			}
-			AudioBroadcastCatch audioBroadcastCatch = audioBroadcastManager.get(ssrcTransaction.getDeviceId(), channel.getChannelId());
-			if (audioBroadcastCatch != null) {
-				// 来自上级平台的停止对讲
-				logger.info("[停止对讲] 来自上级，平台：{}, 通道：{}", ssrcTransaction.getDeviceId(), channel.getChannelId());
-				audioBroadcastManager.del(ssrcTransaction.getDeviceId(), channel.getChannelId());
-			}
 		}
 	}
 }

@@ -31,7 +31,6 @@ create table wvp_device (
                             password character varying(255),
                             as_message_channel bool default false,
                             keepalive_interval_time integer,
-                            switch_primary_sub_stream bool default false,
                             broadcast_push_after_ack bool default false,
                             constraint uk_device_device unique (device_id)
 );
@@ -320,7 +319,17 @@ create table wvp_resources_tree (
                                     parentId integer,
                                     path character varying(255)
 );
-
+create table wvp_user_api_key (
+                                  id serial primary key ,
+                                  user_id bigint,
+                                  app character varying(255) ,
+                                  api_key text,
+                                  expired_at bigint,
+                                  remark character varying(255),
+                                  enable bool default true,
+                                  create_time character varying(50),
+                                  update_time character varying(50)
+);
 
 /*初始数据*/
 INSERT INTO wvp_user VALUES (1, 'admin','21232f297a57a5a743894a0e4a801fc3',1,'2021-04-13 14:14:57','2021-04-13 14:14:57','3e80d1762a324d5b0ff636e0bd16f1e3');

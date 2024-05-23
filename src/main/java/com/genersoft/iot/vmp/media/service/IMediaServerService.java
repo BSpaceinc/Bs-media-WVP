@@ -76,6 +76,8 @@ public interface IMediaServerService {
 
     boolean stopSendRtp(MediaServer mediaInfo, String app, String stream, String ssrc);
 
+    boolean initStopSendRtp(MediaServer mediaInfo, String app, String stream, String ssrc);
+
     boolean deleteRecordDirectory(MediaServer mediaServerItem, String app, String stream, String date, String fileName);
 
     List<StreamInfo> getMediaList(MediaServer mediaInfo, String app, String stream, String callId);
@@ -141,5 +143,12 @@ public interface IMediaServerService {
 
     void startSendRtpPassive(MediaServer mediaServer, ParentPlatform platform, SendRtpItem sendRtpItem, Integer timeout);
 
-    void startSendRtpStream(MediaServer mediaServer, ParentPlatform platform, SendRtpItem sendRtpItem);
+    void startSendRtp(MediaServer mediaServer, ParentPlatform platform, SendRtpItem sendRtpItem);
+
+    SendRtpItem createSendRtpItem(MediaServer mediaServerItem, String addressStr, int port, String ssrc, String requesterId, String deviceId, String channelId, boolean mediaTransmissionTCP, boolean rtcp);
+
+    SendRtpItem createSendRtpItem(MediaServer serverItem, String ip, int port, String ssrc, String platformId,
+                                  String app, String stream, String channelId, boolean tcp, boolean rtcp);
+
+    MediaServer getMediaServerByAppAndStream(String app, String stream);
 }
